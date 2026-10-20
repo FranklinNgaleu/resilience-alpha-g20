@@ -1,0 +1,42 @@
+[
+  {
+    "title": "Sécurité du service de paiement",
+    "content": "Le service de paiement est un composant critique du démonstrateur. Il ne doit pas être exposé directement sur un réseau non maîtrisé. Les transactions sont fictives et destinées uniquement à un usage pédagogique. L’API doit rester localement isolée et surveillée."
+  },
+  {
+    "title": "Règles de gouvernance",
+    "content": "Les équipes suivent un modèle de développement sur branches. La branche main est la version stable, develop est l’intégration, et les branches feature sont utilisées pour le travail individuel. Les pull requests doivent être revues avant validation."
+  },
+  {
+    "title": "Protection des données",
+    "content": "Les secrets, clés et variables d’environnement ne doivent jamais être commités. Les mots de passe doivent être distincts et robustes. Les données de démonstration restent fictives et ne doivent pas être utilisées comme données réelles."
+  },
+  {
+    "title": "Mise en œuvre de la sécurité",
+    "content": "La plateforme utilise un socle d’infrastructure avec PostgreSQL, Prometheus et Grafana. Les accès réseau doivent être explicitement autorisés et limités. Le WAF et les mécanismes de remédiation sont des composants à intégrer progressivement."
+  },
+  {
+    "title": "Détection des anomalies de transaction",
+    "content": "Les transactions inhabituelles sont détectées avec un modèle de machine learning basé sur le montant, l’heure, le jour de la semaine, le type de paiement et la fréquence. Une augmentation brutale du montant, des opérations tardives ou des pics de fréquence doivent déclencher une alerte et un examen manuel."
+  },
+  {
+    "title": "Fraude sur les paiements",
+    "content": "Les cas de fraude sur les paiements incluent les montants aberrants, les achats hors horaire habituel, les demandes répétées en très peu de temps et les activités sur des canaux non familiers. Un signal de fraude doit être validé par un processus d’investigation et un blocage temporaire si nécessaire."
+  },
+  {
+    "title": "Contrôles de sécurité applicatifs",
+    "content": "Les services applicatifs doivent exposer uniquement les endpoints strictement nécessaires, valider toutes les entrées utilisateur et limiter les privilèges d’accès. Les erreurs doivent être surveillées, sécurisées et ne pas remettre en cause les mécanismes d’authentification."
+  },
+  {
+    "title": "Réponse aux incidents",
+    "content": "En cas d’incident, il faut isoler le service concerné, conserver les traces de journal, analyser les transactions suspectes et documenter la procédure de remédiation. Une forte capacité de réaction rapide réduit l’impact sur la clientèle et la conformité."
+  },
+  {
+    "title": "Gouvernance de l’intégration",
+    "content": "Les modifications doivent passer par des revues de code et des validations ciblées sur les services IA et data. Les corrections de sécurité doivent être documentées, testées et validées avant la mise en production."
+  },
+  {
+    "title": "Intégration IA",
+    "content": "La partie IA du projet repose sur la détection d’anomalies et la recherche contextualisée sur la documentation. Un modèle de machine learning est utilisé pour identifier les transactions inhabituelles et le moteur de recherche aide à répondre aux questions de sécurité et de gouvernance."
+  }
+]
