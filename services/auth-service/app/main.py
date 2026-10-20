@@ -8,8 +8,26 @@ from fastapi import FastAPI, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from pwdlib import PasswordHash
+from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="Resilience Alpha - Auth Service")
+
+
+app = FastAPI(
+    title="Resilience Alpha - Auth Service",
+    version="0.1.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:3000",
+    ],
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Authorization", "Content-Type"],
+)
 
 password_hash = PasswordHash.recommended()
 security = HTTPBearer()
