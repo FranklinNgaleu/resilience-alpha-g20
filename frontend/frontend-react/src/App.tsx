@@ -1,4 +1,3 @@
-
 import { useState, type FormEvent } from "react";
 import {
   ShieldCheck,
@@ -9,6 +8,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { login } from "./api";
+import Dashboard from "./components/Dashboard";
 
 export default function App() {
   const [email, setEmail] = useState("demo@resilience.local");
@@ -39,24 +39,10 @@ export default function App() {
 
   if (token) {
     return (
-      <main className="min-h-screen bg-[#080f1f] flex items-center justify-center p-6">
-        <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-[#111c30] p-10 text-center shadow-2xl">
-          <ShieldCheck className="mx-auto mb-5 h-14 w-14 text-emerald-400" />
-          <h1 className="text-2xl font-bold text-white">
-            Connexion réussie
-          </h1>
-          <p className="mt-3 text-slate-400">
-            Bienvenue sur RESILIENCE-ALPHA.
-          </p>
-          <button
-            onClick={() => setToken(null)}
-            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-slate-700 px-5 py-3 font-medium text-white hover:bg-slate-600"
-          >
-            <LogOut size={18} />
-            Se déconnecter
-          </button>
-        </div>
-      </main>
+      <Dashboard
+        token={token}
+        onLogout={() => setToken(null)}
+      />
     );
   }
 
