@@ -1,4 +1,3 @@
-
 import os
 import uuid
 import logging
@@ -6,6 +5,10 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Literal
+import jwt
+from jwt import InvalidTokenError
+from fastapi import Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -78,6 +81,45 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+security = HTTPBearer(auto_error=False)
+
+JWT_SECRET = os.environ["JWT_SECRET"]
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(security)
+):
+    if credentials is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    try:
+        payload = jwt.decode(
+            credentials.credentials,
+            JWT_SECRET,
+            algorithms=["HS256"],
+            issuer="resilience-alpha-auth",
+            audience="resilience-alpha-payment"
+        )
+
+        user_email = payload.get("sub")
+
+        if not user_email:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid token"
+            )
+
+        return user_email
+
+    except InvalidTokenError:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired token"
+        )
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -113,6 +155,12 @@ def health():
     response_model=PaymentOut,
     status_code=201
 )
+@app.post(
+    "/payments",
+    response_model=PaymentOut,
+    status_code=201,
+    dependencies=[Depends(get_current_user)]
+)
 def create_payment(payload: PaymentIn):
     payment = Payment(
         id=str(uuid.uuid4()),
@@ -138,9 +186,12 @@ def create_payment(payload: PaymentIn):
             detail="Payment service temporarily unavailable"
         )
 
-
 # HISTORIQUE DES PAIEMENTS
-@app.get("/payments", response_model=list[PaymentOut])
+@app.get(
+    "/payments",
+    response_model=list[PaymentOut],
+    dependencies=[Depends(get_current_user)]
+)
 def list_payments(
     limit: int = Query(default=50, ge=1, le=100)
 ):
@@ -168,7 +219,8 @@ def list_payments(
 # DETAIL D'UN PAIEMENT
 @app.get(
     "/payments/{payment_id}",
-    response_model=PaymentOut
+    response_model=PaymentOut,
+    dependencies=[Depends(get_current_user)]
 )
 def get_payment(payment_id: uuid.UUID):
     try:
