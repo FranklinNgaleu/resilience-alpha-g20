@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
   ShieldCheck, LayoutDashboard, CreditCard,
@@ -6,6 +5,8 @@ import {
   CheckCircle2, Wallet, Activity
 } from "lucide-react";
 import { getPayments, createPayment, type Payment } from "../api";
+import PaymentChart from "./PaymentChart";
+import SystemMonitor from "./SystemMonitor";
 
 interface DashboardProps {
   token: string;
@@ -197,6 +198,7 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
                   icon: CheckCircle2,
                   color: "text-violet-400",
                 },
+                
               ].map((stat) => {
                 const Icon = stat.icon;
 
@@ -213,6 +215,14 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
               })}
             </div>
 
+            <div className="mb-8">
+                <PaymentChart payments={payments} />
+                </div>
+
+                <div className="mb-8">
+                <SystemMonitor />
+            </div>
+
             <section className="rounded-2xl border border-slate-800 bg-[#111c30] p-6">
               <div className="mb-6 flex items-center justify-between">
                 <h3 className="text-lg font-semibold">
@@ -227,8 +237,10 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
                 </button>
               </div>
 
+
               <PaymentTable payments={payments.slice(0, 5)} loading={loading} />
             </section>
+           
           </>
         )}
 
