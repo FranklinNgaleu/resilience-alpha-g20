@@ -19,6 +19,37 @@ Copy-Item .env.example .env
 - Métriques : http://localhost:8000/metrics
 - Prometheus : http://localhost:9090
 - Grafana : http://localhost:3001 (identifiants dans `.env`)
+- Anomaly Detector : http://localhost:8001/docs
+- RAG Assistant : http://localhost:8002/docs
+- Ollama : http://localhost:11434
+
+### Lancement complet du projet
+```powershell
+cd "C:\Users\steph\OneDrive\Desktop\resilience-alpha-g20"
+Copy-Item .env.example .env
+# Modifier .env avec des mots de passe sécurisés
+
+docker compose up -d --build
+
+docker compose ps
+python tests/smoke_test.py
+```
+
+### Vérification rapide de la partie IA/Data
+```powershell
+curl.exe http://localhost:8001/health
+curl.exe http://localhost:8002/health
+curl.exe -X POST "http://localhost:8001/detect" -H "Content-Type: application/json" --data-raw '{"amount":6500,"currency":"EUR","timestamp":"2026-10-20T02:00:00Z","merchant_id":"ecommerce","frequency":8}'
+curl.exe -X POST "http://localhost:8002/ask" -H "Content-Type: application/json" --data-raw '{"question":"Quelles sont les mesures de sécurité à mettre en place pour les transactions ?"}'
+```
+
+### Commandes utiles
+```powershell
+docker compose logs -f rag-assistant
+docker compose logs -f anomaly-detector
+docker compose up -d --build anomaly-detector rag-assistant ollama
+docker compose down
+```
 
 Tous les ports publiés sont liés à `127.0.0.1` pour le développement local. Pour la démonstration depuis le PC Attaquant, prévoir **un accès réseau explicitement autorisé et limité** (proxy WAF exposé sur l'interface Hotspot), jamais la base ou Grafana par défaut.
 
@@ -43,6 +74,15 @@ Tous les ports publiés sont liés à `127.0.0.1` pour le développement local. 
 - IA : anomaly-detector, Ollama, LangChain, RAG et métriques ML.
 - CYBER : WAF, SIEM/SOC, SOPS, scénarios de test strictement autorisés.
 - GOUVERNANCE : EBIOS RM, PCA/PRA, NIS2/DORA, documentation et preuves.
+
+## Partie IA & Data – modèle ML
+- La partie IA/Data inclut un modèle de machine learning pour la détection d’anomalies sur les transactions.
+- Le modèle de référence retenu est un `IsolationForest` de scikit-learn, appliqué sur des features de transaction : montant, heure, jour, week-end et fréquence.
+- La couche IA comprend également un module de recherche documentaire basé sur le principe RAG, avec un moteur de retrieval en `TF-IDF + cosine similarity`.
+- La génération de réponse est connectée à Ollama via LangChain, avec repli sûr sur le contexte récupéré si le modèle local n’est pas disponible.
+- Les métriques ML sont exposées via Prometheus avec les compteurs de prédictions et d’anomalies détectées.
+- Les données de démonstration sont synthétiques, sans usage de données réelles, et sont stockées dans les services dédiés à l’IA/Data.
+- Les sorties attendues sont des scores d’anomalie, des niveaux de sévérité, des métriques de suivi et des réponses contextuelles sur la documentation projet.
 
 ## Contrats d'intégration initiaux
 - `GET /health` : 200 si l'API **et** PostgreSQL fonctionnent.
