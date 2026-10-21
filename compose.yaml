@@ -49,6 +49,7 @@ services:
       - "127.0.0.1:8001:8000"
     networks: [internal]
 
+
   anomaly-detector:
     build:
       context: ./services/anomaly-detector
@@ -57,9 +58,11 @@ services:
     networks: [internal]
     restart: unless-stopped
 
+
+
   rag-assistant:
-    build:
-      context: ./services/rag-assistant
+    build: ./services/rag-assistant
+
     environment:
       OLLAMA_BASE_URL: http://ollama:11434
       OLLAMA_MODEL: llama3.2
@@ -79,6 +82,7 @@ services:
     networks: [internal]
     restart: unless-stopped
 
+
   waf:
     build: ./infrastructure/waf
     ports:
@@ -88,6 +92,7 @@ services:
         condition: service_healthy
     networks: [internal]
     restart: unless-stopped
+
 
   frontend:
     build:
