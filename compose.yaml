@@ -21,6 +21,7 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-resilience}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-resilience}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET manquant}
+      ANOMALY_DETECTOR_URL: http://anomaly-detector:8001
     depends_on:
       db:
         condition: service_healthy
@@ -44,9 +45,40 @@ services:
       DEMO_PASSWORD_HASH: ${DEMO_PASSWORD_HASH:?}
     ports:
       - "127.0.0.1:8001:8000"
+    networks: [internal]
+
+
+  anomaly-detector:
+    build:
+      context: ./services/anomaly-detector
+    ports:
+      - "127.0.0.1:8002:8001"
+    networks: [internal]
+    restart: unless-stopped
+
+  rag-assistant:
+    build:
+      context: ./services/rag-assistant
+    ports:
+      - "127.0.0.1:8003:8002"
+    networks: [internal]
+    restart: unless-stopped
+
+  waf:
+    build: ./infrastructure/waf
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on:
+      payment-service:
+        condition: service_healthy
+    networks: [internal]
+    restart: unless-stopped
+
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend/frontend-react
+      dockerfile: Dockerfile
     ports:
       - "127.0.0.1:3000:80"
     depends_on:
@@ -72,7 +104,29 @@ services:
       - "127.0.0.1:3001:3000"
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning
     networks: [internal]
+    restart: unless-stopped
+  loki:
+    image: grafana/loki:3.2.0
+    ports:
+      - "127.0.0.1:3100:3100"
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./infrastructure/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+    networks: [internal]
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:3.2.0
+    volumes:
+      - ./infrastructure/loki/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/promtail-config.yaml
+    depends_on:
+      - loki
+    networks: [internal]
+    restart: unless-stopped
 
 volumes:
   postgres_data:
