@@ -18,3 +18,5 @@ dist/
 # IDE
 .vscode/
 .idea/
+*.pem
+*.key

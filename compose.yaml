@@ -20,6 +20,8 @@ services:
     build: ./services/payment-service
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-resilience}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-resilience}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET manquant}
+      ANOMALY_DETECTOR_URL: http://anomaly-detector:8001
     depends_on:
       db:
         condition: service_healthy
@@ -33,14 +35,26 @@ services:
     networks: [internal]
     restart: unless-stopped
 
+
   anomaly-detector:
     build: ./services/anomaly-detector
     ports:
       - "127.0.0.1:8001:8001"
     environment:
       PORT: 8001
-    networks: [internal]
+
+  auth-service:
+    build:
+      context: ./services/auth-service
     restart: unless-stopped
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?}
+      DEMO_EMAIL: ${DEMO_EMAIL:?}
+      DEMO_PASSWORD_HASH: ${DEMO_PASSWORD_HASH:?}
+    ports:
+      - "127.0.0.1:8001:8000"
+    networks: [internal]
+
 
   rag-assistant:
     build: ./services/rag-assistant
@@ -62,9 +76,25 @@ services:
       - ollama_data:/root/.ollama
     networks: [internal]
     restart: unless-stopped
+    build:
+      context: ./services/rag-assistant
+    
+
+  waf:
+    build: ./infrastructure/waf
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on:
+      payment-service:
+        condition: service_healthy
+    networks: [internal]
+    restart: unless-stopped
+
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend/frontend-react
+      dockerfile: Dockerfile
     ports:
       - "127.0.0.1:3000:80"
     depends_on:
@@ -90,7 +120,29 @@ services:
       - "127.0.0.1:3001:3000"
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning
     networks: [internal]
+    restart: unless-stopped
+  loki:
+    image: grafana/loki:3.2.0
+    ports:
+      - "127.0.0.1:3100:3100"
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./infrastructure/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+    networks: [internal]
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:3.2.0
+    volumes:
+      - ./infrastructure/loki/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/promtail-config.yaml
+    depends_on:
+      - loki
+    networks: [internal]
+    restart: unless-stopped
 
 volumes:
   postgres_data:
