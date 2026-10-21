@@ -5,7 +5,6 @@ import {
   LockKeyhole,
   ArrowRight,
   LoaderCircle,
-  LogOut,
 } from "lucide-react";
 import { login } from "./api";
 import Dashboard from "./components/Dashboard";

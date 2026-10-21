@@ -2,18 +2,19 @@ import { useEffect, useState } from "react";
 import {
   ShieldCheck, LayoutDashboard, CreditCard,
   History, LogOut, Plus, RefreshCw,
-  CheckCircle2, Wallet, Activity
+  CheckCircle2, Wallet, Activity, ShieldAlert
 } from "lucide-react";
 import { getPayments, createPayment, type Payment } from "../api";
 import PaymentChart from "./PaymentChart";
 import SystemMonitor from "./SystemMonitor";
+import AnomalyMonitor from "./AnomalyMonitor";
 
 interface DashboardProps {
   token: string;
   onLogout: () => void;
 }
 
-type Page = "dashboard" | "payment" | "history";
+type Page = "dashboard" | "payment" | "history" | "anomalies";
 
 export default function Dashboard({ token, onLogout }: DashboardProps) {
   const [page, setPage] = useState<Page>("dashboard");
@@ -103,6 +104,7 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
             { id: "dashboard", label: "Tableau de bord", icon: LayoutDashboard },
             { id: "payment", label: "Nouveau paiement", icon: CreditCard },
             { id: "history", label: "Historique", icon: History },
+            { id: "anomalies", label: "Surveillance IA", icon: ShieldAlert },
           ].map((item) => {
             const Icon = item.icon;
 
@@ -144,10 +146,12 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
             </p>
             <h2 className="text-3xl font-bold">
               {page === "dashboard"
-                ? "Tableau de bord"
-                : page === "payment"
-                ? "Nouveau paiement"
-                : "Historique des paiements"}
+                    ? "Tableau de bord"
+                    : page === "payment"
+                    ? "Nouveau paiement"
+                    : page === "history"
+                    ? "Historique des paiements"
+                    : "Surveillance IA"}
             </h2>
           </div>
 
@@ -304,6 +308,9 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
 
             <PaymentTable payments={payments} loading={loading} />
           </section>
+        )}
+        {page === "anomalies" && (
+        <AnomalyMonitor token={token} />
         )}
       </main>
     </div>
