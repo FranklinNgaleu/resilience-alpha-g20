@@ -8,10 +8,13 @@ export interface Payment {
   created_at: string;
 }
 
-async function parseResponse(response: Response) {
+async function parseResponse(
+  response: Response,
+  unauthorizedMessage = "Session expirée ou accès non autorisé."
+) {
   if (!response.ok) {
     if (response.status === 401 || response.status === 403) {
-      throw new Error("Session expirée ou accès non autorisé.");
+      throw new Error(unauthorizedMessage);
     }
 
     throw new Error(`Erreur API : ${response.status}`);
@@ -27,7 +30,10 @@ export async function login(email: string, password: string): Promise<string> {
     body: JSON.stringify({ email, password }),
   });
 
-  const data = await parseResponse(response);
+  const data = await parseResponse(
+    response,
+    "Adresse e-mail ou mot de passe incorrect."
+  );
   return data.access_token;
 }
 

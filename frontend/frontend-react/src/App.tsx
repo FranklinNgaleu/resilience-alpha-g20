@@ -10,7 +10,7 @@ import { login } from "./api";
 import Dashboard from "./components/Dashboard";
 
 export default function App() {
-  const [email, setEmail] = useState("demo@resilience.local");
+  const [email, setEmail] = useState("demo@example.com");
   const [password, setPassword] = useState("");
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
