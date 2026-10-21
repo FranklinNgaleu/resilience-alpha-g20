@@ -57,3 +57,28 @@ export async function createPayment(
 
   return parseResponse(response);
 }
+
+export interface PaymentAnomaly {
+  id: string;
+  payment_id: string;
+  is_anomaly: boolean | null;
+  score: number | null;
+  severity: string;
+  model: string | null;
+  analyzed_at: string;
+}
+
+export async function getPaymentAnomalies(
+  token: string
+): Promise<PaymentAnomaly[]> {
+  const response = await fetch(
+    `${PAYMENT_URL}/payments/anomalies?limit=100`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return parseResponse(response);
+}

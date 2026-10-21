@@ -47,6 +47,7 @@ services:
       - "127.0.0.1:8001:8000"
     networks: [internal]
 
+
   anomaly-detector:
     build:
       context: ./services/anomaly-detector
@@ -72,6 +73,7 @@ services:
         condition: service_healthy
     networks: [internal]
     restart: unless-stopped
+
 
   frontend:
     build:
