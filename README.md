@@ -9,25 +9,30 @@ Démonstrateur pédagogique : **données fictives uniquement**. Cette version es
 ## Démarrage (PowerShell)
 ```powershell
 Copy-Item .env.example .env
-# Modifier .env : choisir deux mots de passe forts différents
- docker compose up -d --build
- docker compose ps
- python tests/smoke_test.py
+Copy-Item .env.auth-service.example .env.auth-service
+# Générer le hash avant de lancer le service, puis remplacer la valeur de DEMO_PASSWORD_HASH :
+docker compose run --rm --no-deps auth-service python -c "from getpass import getpass; from pwdlib import PasswordHash; print(PasswordHash.recommended().hash(getpass('Mot de passe de démonstration : ')))"
+docker compose up -d --build
+docker compose ps
+python tests/smoke_test.py
 ```
 - Page de démarrage : http://localhost:3000
+- Authentification : http://localhost:8001
 - API FastAPI : http://localhost:8000/docs
+- Anomaly Detector : http://localhost:8002/docs
+- RAG Assistant : http://localhost:8003/docs
 - Métriques : http://localhost:8000/metrics
 - Prometheus : http://localhost:9090
 - Grafana : http://localhost:3001 (identifiants dans `.env`)
-- Anomaly Detector : http://localhost:8001/docs
-- RAG Assistant : http://localhost:8002/docs
 - Ollama : http://localhost:11434
 
 ### Lancement complet du projet
 ```powershell
 cd "C:\Users\steph\OneDrive\Desktop\resilience-alpha-g20"
 Copy-Item .env.example .env
+Copy-Item .env.auth-service.example .env.auth-service
 # Modifier .env avec des mots de passe sécurisés
+# Générer un hash avec la commande ci-dessus et le placer dans .env.auth-service
 
 docker compose up -d --build
 
@@ -35,12 +40,12 @@ docker compose ps
 python tests/smoke_test.py
 ```
 
-### Vérification rapide de la partie IA/Data
+### Vérification rapide des APIs
 ```powershell
 curl.exe http://localhost:8001/health
 curl.exe http://localhost:8002/health
-curl.exe -X POST "http://localhost:8001/detect" -H "Content-Type: application/json" --data-raw '{"amount":6500,"currency":"EUR","timestamp":"2026-10-20T02:00:00Z","merchant_id":"ecommerce","frequency":8}'
-curl.exe -X POST "http://localhost:8002/ask" -H "Content-Type: application/json" --data-raw '{"question":"Quelles sont les mesures de sécurité à mettre en place pour les transactions ?"}'
+curl.exe -X POST "http://localhost:8002/detect" -H "Content-Type: application/json" --data-raw '{"amount":6500,"currency":"EUR","timestamp":"2026-10-20T02:00:00Z","merchant_id":"ecommerce","frequency":8}'
+curl.exe -X POST "http://localhost:8003/ask" -H "Content-Type: application/json" --data-raw '{"question":"Quelles sont les mesures de sécurité à mettre en place pour les transactions ?"}'
 ```
 
 ### Commandes utiles
