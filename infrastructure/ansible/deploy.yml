@@ -1,0 +1,24 @@
+---
+- name: Déploiement automatisé de la plateforme
+  hosts: local
+  gather_facts: false
+  vars:
+    project_dir: '{{ playbook_dir }}/../..'
+  tasks:
+    - name: Vérifier que Docker répond
+      command: docker info
+      changed_when: false
+    - name: Valider la configuration Compose
+      command: docker compose config -q
+      args:
+        chdir: '{{ project_dir }}'
+      changed_when: false
+    - name: Construire et lancer la stack
+      command: docker compose up -d {{ '--build' if rebuild | default(false) | bool else '' }} --wait --wait-timeout 180
+      args:
+        chdir: '{{ project_dir }}'
+    - name: Afficher l’état final
+      command: docker compose ps
+      args:
+        chdir: '{{ project_dir }}'
+      changed_when: false
