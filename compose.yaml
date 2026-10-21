@@ -33,6 +33,16 @@ services:
     networks: [internal]
     restart: unless-stopped
 
+  waf:
+    build: ./infrastructure/waf
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on:
+      payment-service:
+        condition: service_healthy
+    networks: [internal]
+    restart: unless-stopped
+
   frontend:
     build: ./frontend
     ports:
@@ -60,7 +70,29 @@ services:
       - "127.0.0.1:3001:3000"
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning
     networks: [internal]
+    restart: unless-stopped
+  loki:
+    image: grafana/loki:3.2.0
+    ports:
+      - "127.0.0.1:3100:3100"
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./infrastructure/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+    networks: [internal]
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:3.2.0
+    volumes:
+      - ./infrastructure/loki/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/promtail-config.yaml
+    depends_on:
+      - loki
+    networks: [internal]
+    restart: unless-stopped
 
 volumes:
   postgres_data:
