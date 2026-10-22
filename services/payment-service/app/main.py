@@ -61,6 +61,7 @@ def create_payment(payload: PaymentIn):
     return result
 
 
+<<<<<<< Updated upstream
 @app.get("/payments/{payment_id}")
 def get_payment(payment_id: str):
     with Session() as session:
@@ -68,3 +69,104 @@ def get_payment(payment_id: str):
         if payment is None:
             raise HTTPException(404, "Payment not found")
         return {"id": payment.id, "amount": str(payment.amount), "currency": payment.currency, "status": payment.status}
+=======
+# ============================================================
+# HISTORIQUE DES PAIEMENTS
+# ============================================================
+
+@app.get(
+    "/payments",
+    response_model=list[PaymentOut],
+    dependencies=[Depends(get_current_user)]
+)
+def list_payments(
+    limit: int = Query(default=50, ge=1, le=100)
+):
+    try:
+        with Session() as session:
+            payments = session.scalars(
+                select(Payment)
+                .order_by(Payment.created_at.desc())
+                .limit(limit)
+            ).all()
+
+            return [
+                PaymentOut.model_validate(payment)
+                for payment in payments
+            ]
+
+    except SQLAlchemyError:
+        logger.exception("Payment listing failed")
+        raise HTTPException(
+            status_code=503,
+            detail="Unable to retrieve payments"
+        )
+
+
+# ============================================================
+# DETAIL D'UN PAIEMENT
+# ============================================================
+@app.get(
+    "/payments/anomalies",
+    response_model=list[PaymentAnomalyOut],
+    dependencies=[Depends(get_current_user)],
+)
+def list_payment_anomalies(
+    limit: int = Query(default=50, ge=1, le=100),
+    only_suspicious: bool = False,
+):
+    try:
+        with Session() as session:
+            query = select(PaymentAnomaly)
+
+            if only_suspicious:
+                query = query.where(
+                    PaymentAnomaly.is_anomaly.is_(True)
+                )
+
+            analyses = session.scalars(
+                query.order_by(
+                    PaymentAnomaly.analyzed_at.desc()
+                ).limit(limit)
+            ).all()
+
+            return [
+                PaymentAnomalyOut.model_validate(analysis)
+                for analysis in analyses
+            ]
+
+    except SQLAlchemyError:
+        logger.exception("Unable to retrieve AI analyses")
+        raise HTTPException(
+            status_code=503,
+            detail="Unable to retrieve AI analyses",
+        )
+
+
+@app.get(
+    "/payments/{payment_id}",
+    response_model=PaymentOut,
+    dependencies=[Depends(get_current_user)]
+)
+def get_payment(payment_id: uuid.UUID):
+
+    try:
+        with Session() as session:
+            payment = session.get(Payment, str(payment_id))
+
+            if payment is None:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Payment not found"
+                )
+
+            return PaymentOut.model_validate(payment)
+
+    except SQLAlchemyError:
+        logger.exception("Payment lookup failed")
+        raise HTTPException(
+            status_code=503,
+            detail="Unable to retrieve payment"
+        )
+
+>>>>>>> Stashed changes
